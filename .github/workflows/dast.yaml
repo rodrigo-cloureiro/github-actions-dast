@@ -1,4 +1,4 @@
-name: DAST Scan
+name: DAST Scan (Javalin Demo)
 
 on:
   push:
@@ -26,35 +26,35 @@ jobs:
 
       - name: Verificar JAR gerado
         run: |
-          echo "Conteúdo do target"
+          echo "=== Conteúdo do target/ ==="
           ls -lh target/
           echo ""
-          echo "Verificando se o JAR é executável"
-          jar tf target/dast-demo-1.0-SNAPSHOT.jar | head-20
+          echo "=== Verificando se JAR é executável ==="
+          jar tf target/dast-demo-1.0-SNAPSHOT.jar | head -20
 
       - name: Start app in background
         run: |
-          echo "Iniciando app em Java"
-          nohup java -jar target/dast-demo-1.0-SNAPSHOT.jar > logs.txt 2>&1
-          echo $! > app.pid  # Salva o PID do processo
+          echo "Iniciando aplicação Javalin..."
+          nohup java -jar target/dast-demo-1.0-SNAPSHOT.jar > logs.txt 2>&1 &
+          echo $! > app.pid
           echo "App PID: $(cat app.pid)"
 
       - name: Wait for app to be ready
         run: |
           echo "Aguardando aplicação em http://localhost:7000 ..."
           for i in {1..60}; do
-          if curl -sSf "http://localhost:7000/hello?user=test" >/dev/null 2>&1; then
-           echo "✅ App está pronta!"
-           break
-          fi
-          echo "Tentativa $i/60..."
-          sleep 2
+            if curl -sSf "http://localhost:7000/hello?user=test" >/dev/null 2>&1; then
+              echo "✅ App está pronta!"
+              break
+            fi
+            echo "Tentativa $i/60..."
+            sleep 2
           done
-          
+
           if ! curl -sSf "http://localhost:7000/hello?user=test" >/dev/null 2>&1; then
-          echo "❌ App não iniciou a tempo. Logs:"
-          cat logs.txt || true
-          exit 1
+            echo "❌ App não iniciou a tempo. Logs:"
+            cat logs.txt || true
+            exit 1
           fi
           
           # Testar endpoints manualmente
@@ -108,29 +108,29 @@ jobs:
         run: |
           cat > zap-reports/RESUMO.md << 'EOF'
           # 🔒 Relatório DAST - OWASP ZAP
-
+          
           ## 📊 Aplicação Testada
           - **URL:** http://127.0.0.1:7000
           - **Framework:** Javalin 6.7.0
           - **Data:** $(date)
-
+          
           ## 🎯 Vulnerabilidades Encontradas
-
+          
           ### 1. Information Disclosure
           **Endpoint:** `/hello?user=admin`
           - Expõe secret hardcoded na resposta
           - Severidade: ALTA
-
+          
           ### 2. SQL Injection
           **Endpoint:** `/getUser?id=1`
           - Concatenação direta na query SQL
           - Severidade: CRÍTICA
-
+          
           ### 3. Command Injection
           **Endpoint:** `/run?cmd=whoami`
           - Execução de comandos sem validação
           - Severidade: CRÍTICA
-
+          
           ## 📄 Relatórios Disponíveis
           - `zap_report.html` - Relatório visual completo
           - `zap_report.json` - Dados estruturados
