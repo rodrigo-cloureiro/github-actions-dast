@@ -9,7 +9,7 @@ services:
     ports:
       - "7000:7000"
     healthcheck:
-      test: [ "CMD", "curl", "-f", "http://localhost:7000/hello?user=test" ]
+      test: [ "CMD", "curl", "-f", "http://localhost:7000/xss?name=test" ]
       interval: 5s
       timeout: 3s
       retries: 10

@@ -35,6 +35,18 @@ jobs:
       - name: Build docker-compose images
         run: docker compose build
 
+      # Espera o app ficar pronto
+      - name: Wait for app to be ready
+        run: |
+          echo "Waiting for Javalin app..."
+          for i in {1..15}; do
+            if curl -s http://localhost:7000/xss?name=test; then
+              echo "App is ready!"
+              break
+            fi
+            sleep 2
+          done
+
       # Rodar o Compose: app + zap
       - name: Run DAST Scan
         run: docker compose up --exit-code-from zap

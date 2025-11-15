@@ -10,6 +10,8 @@ public class Main {
             // Não definir headers de segurança intencionalmente
         }).start(PORT);
 
+        app.get("/", ctx -> ctx.result("OK"));
+
         // Vulnerabilidade 1: XSS refletido
         app.get("/xss", ctx -> {
             String name = ctx.queryParam("name");
