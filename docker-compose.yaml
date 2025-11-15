@@ -16,6 +16,7 @@ services:
 
   zap:
     image: ghcr.io/zaproxy/zaproxy:stable
+    user: "0:0"
     container_name: zap-baseline
     depends_on:
       app:
