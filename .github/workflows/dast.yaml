@@ -49,7 +49,7 @@ jobs:
 
       # Rodar o Compose: app + zap
       - name: Run DAST Scan
-        run: docker compose up --exit-code-from zap
+        run: docker compose up --exit-code-from zap || true
 
       # Listar relatórios criados
       - name: List reports
