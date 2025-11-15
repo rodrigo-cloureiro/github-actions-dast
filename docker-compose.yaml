@@ -1,0 +1,31 @@
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: javalin-app
+    ports:
+      - "7000:7000"
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:7000/hello?user=test" ]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  zap:
+    image: ghcr.io/zaproxy/zaproxy:stable
+    container_name: zap-baseline
+    depends_on:
+      app:
+        condition: service_healthy
+    volumes:
+      - ./zap-reports:/zap/wrk
+    command: >
+      zap-baseline.py
+      -t http://app:7000
+      -r zap_report.html
+      -J zap_report.json
+      -w zap_report.md
+      -d
