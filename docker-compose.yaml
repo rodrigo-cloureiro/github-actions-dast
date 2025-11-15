@@ -30,4 +30,3 @@ services:
       -J zap_report.json
       -w zap_report.md
       -d
-      --exit-code-risk 3
