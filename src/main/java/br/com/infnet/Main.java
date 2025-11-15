@@ -2,58 +2,43 @@ package br.com.infnet;
 
 import io.javalin.Javalin;
 
-import java.util.Objects;
-
 public class Main {
     private static final int PORT = 7000;
-    private static final String SECRET_KEY = "123456";
 
     public static void main(String[] args) {
-        Javalin app = Javalin.create().start(PORT);
+        Javalin app = Javalin.create(config -> {
+            // Não definir headers de segurança intencionalmente
+        }).start(PORT);
 
-        // Endpoint 1: Exposição de secret key
-        app.get("/hello", ctx -> {
-            String user = ctx.queryParam("user");
-
-            if ("admin".equals(user)) {
-                ctx.result("Bem-vindo admin! Chave: " + SECRET_KEY);
-            } else {
-                ctx.result("Olá, " + user + " !");
-            }
+        // Vulnerabilidade 1: XSS refletido
+        app.get("/xss", ctx -> {
+            String name = ctx.queryParam("name");
+            ctx.contentType("text/html");
+            ctx.result("<h1>Olá " + name + "!</h1>");
         });
 
-        // Endpoint 2: Simulação de SQL Injection
-        app.get("/getUser", ctx -> {
+        // Vulnerabilidade 2: SQL Injection real (simulado com array)
+        app.get("/users", ctx -> {
             String id = ctx.queryParam("id");
-            String query = "SELECT * FROM users WHERE id = " + id;
-
-            System.out.println("Executando query (demo): " + query);
-
+            String[] users = {"Alpha", "Bravo", "Charlie"};
             try {
-                int userId = Integer.parseInt(Objects.requireNonNull(id));
-                String[] users = {"Alpha", "Bravo", "Charlie", "Delta", "Echo", "Foxtrot"};
-
-                if (userId > 0 && userId < users.length) {
-                    ctx.result(users[userId - 1]);
-                } else {
-                    ctx.result("Usuário não encontrado");
-                }
+                // Aqui simula SQL injection ao permitir qualquer string
+                int userId = Integer.parseInt(id);
+                ctx.result(users[userId - 1]);
             } catch (Exception e) {
-                ctx.result("Erro no input");
+                ctx.result("Erro: " + e.getMessage());
             }
         });
 
-        // Endpoint 3: Simulação de command injection
-        app.get("/run", ctx -> {
-            String cmd = ctx.queryParam("cmd");
+        // Vulnerabilidade 3: Exposição de segredo sensível
+        app.get("/secret", ctx -> {
+            String token = "SECRET_TOKEN_123456";
+            ctx.result("Token secreto: " + token);
+        });
 
-            try {
-                Runtime.getRuntime().exec(cmd);
-            } catch (Exception e) {
-                ctx.result("Erro na solicitação");
-            }
-
-            ctx.result("Comando recebido: " + cmd);
+        // Vulnerabilidade 4: Insecure headers ausentes (não adiciona nenhum header de segurança)
+        app.get("/insecure", ctx -> {
+            ctx.result("Conteúdo inseguro aqui!");
         });
     }
 }
